@@ -156,10 +156,23 @@
     <script>
     // Função principal que inicializa todo o site
     function initializeApp() {
+        
+        // ==================================================================
+        // !!!!!!!!!!     PONTO DE ATENÇÃO IMPORTANTE     !!!!!!!!!!
+        //
+        // O erro da página em branco acontece porque o valor 'SEU_PROJECT_ID'
+        // abaixo não foi substituído pelo seu ID de projeto real do Sanity.
+        //
+        // 1. Vá para sanity.io/manage
+        // 2. Copie o seu "Project ID".
+        // 3. Cole-o no lugar de 'SEU_PROJECT_ID' abaixo.
+        //
+        // ==================================================================
+
         // --- CONFIGURAÇÃO DO SANITY ---
         const sanityClient = window.SanityClient.createClient({
             // Encontre essas informações no painel do seu projeto em sanity.io
-            projectId: 'SEU_PROJECT_ID', // <<< SUBSTITUA AQUI
+            projectId: 't69e086n', // <<< SUBSTITUA AQUI
             dataset: 'production',   // <<< GERALMENTE 'production'
             apiVersion: '2022-03-07',
             useCdn: true, // `false` se você quer sempre os dados mais recentes
@@ -261,20 +274,14 @@
         });
     }
 
-    // CORREÇÃO: Esta função verifica se a biblioteca do Sanity já carregou.
-    // Se não, ela espera um pouco e tenta de novo.
-    // Isso evita o erro de "timing" (race condition).
     function checkSanityLoaded() {
         if (window.SanityClient) {
-            // A biblioteca carregou, podemos iniciar o site.
             initializeApp();
         } else {
-            // Ainda não carregou, vamos esperar 100ms e verificar novamente.
             setTimeout(checkSanityLoaded, 100);
         }
     }
 
-    // Inicia o processo de verificação.
     checkSanityLoaded();
     
     </script>
