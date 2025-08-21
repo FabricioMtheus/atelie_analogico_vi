@@ -154,15 +154,12 @@
     </div>
 
     <script>
-    // CORREÇÃO: Mudar de 'DOMContentLoaded' para 'window.onload'.
-    // 'onload' espera que TODOS os recursos (incluindo scripts externos como o do Sanity)
-    // sejam carregados antes de executar o código, evitando o erro.
-    window.onload = () => {
-        
+    // Função principal que inicializa todo o site
+    function initializeApp() {
         // --- CONFIGURAÇÃO DO SANITY ---
         const sanityClient = window.SanityClient.createClient({
             // Encontre essas informações no painel do seu projeto em sanity.io
-            projectId: 't69e086n', // <<< SUBSTITUA AQUI
+            projectId: 'SEU_PROJECT_ID', // <<< SUBSTITUA AQUI
             dataset: 'production',   // <<< GERALMENTE 'production'
             apiVersion: '2022-03-07',
             useCdn: true, // `false` se você quer sempre os dados mais recentes
@@ -262,7 +259,24 @@
             bioContent.innerHTML = `<p class="text-zinc-400">${result.replace(/\n\n/g, '</p><p class="text-zinc-400 mt-4">')}</p>`;
             showResult("Biografia Gerada", result);
         });
-    };
+    }
+
+    // CORREÇÃO: Esta função verifica se a biblioteca do Sanity já carregou.
+    // Se não, ela espera um pouco e tenta de novo.
+    // Isso evita o erro de "timing" (race condition).
+    function checkSanityLoaded() {
+        if (window.SanityClient) {
+            // A biblioteca carregou, podemos iniciar o site.
+            initializeApp();
+        } else {
+            // Ainda não carregou, vamos esperar 100ms e verificar novamente.
+            setTimeout(checkSanityLoaded, 100);
+        }
+    }
+
+    // Inicia o processo de verificação.
+    checkSanityLoaded();
+    
     </script>
 </body>
 </html>
