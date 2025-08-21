@@ -114,7 +114,7 @@
                     <div class="md:col-span-2">
                         <img src="https://placehold.co/500x500/18181b/e4e4e7?text=Sua+Foto" onerror="this.onerror=null;this.src='https://placehold.co/500x500/18181b/e4e4e7?text=Erro+ao+carregar';" alt="Uma foto sua" class="rounded-full w-48 h-48 md:w-full md:h-auto object-cover mx-auto md:rounded-lg">
                     </div>
-                    <div class="md:col-span-3 text-center md:text-left">
+                    <div class="md-col-span-3 text-center md-text-left">
                         <h2 class="text-3xl font-bold text-white mb-6">Sobre mim</h2>
                         <div id="bioContent">
                             <p class="mb-4 text-zinc-400">Olá! Sou [Seu Nome], um(a) fotógrafo(a) apaixonado(a) pela arte e pelo processo da fotografia analógica...</p>
@@ -157,32 +157,39 @@
     // Função principal que inicializa todo o site
     function initializeApp() {
         
-        // ==================================================================
-        // !!!!!!!!!!     PONTO DE ATENÇÃO IMPORTANTE     !!!!!!!!!!
-        //
-        // O erro da página em branco acontece porque o valor 'SEU_PROJECT_ID'
-        // abaixo não foi substituído pelo seu ID de projeto real do Sanity.
-        //
-        // 1. Vá para sanity.io/manage
-        // 2. Copie o seu "Project ID".
-        // 3. Cole-o no lugar de 'SEU_PROJECT_ID' abaixo.
-        //
-        // ==================================================================
-
         // --- CONFIGURAÇÃO DO SANITY ---
+        const projectId = 't69e086n'; // <<< SUBSTITUA AQUI
+
+        // NOVO: Verificação para garantir que o Project ID foi alterado.
+        // Se não foi, exibe uma mensagem de erro clara em vez de uma página em branco.
+        if (projectId === 'SEU_PROJECT_ID' || !projectId) {
+            document.body.innerHTML = `
+                <div class="h-screen flex items-center justify-center text-center bg-zinc-900 text-white p-8">
+                    <div>
+                        <h1 class="text-3xl font-bold text-red-500 mb-4">Erro de Configuração</h1>
+                        <p class="text-lg text-zinc-300">
+                            Você precisa configurar seu Sanity Project ID no arquivo HTML.
+                        </p>
+                        <p class="mt-2 text-zinc-400">
+                            Abra o código, encontre a linha com <code class="bg-zinc-700 p-1 rounded">'SEU_PROJECT_ID'</code> e substitua pelo seu ID real do painel do Sanity.
+                        </p>
+                    </div>
+                </div>
+            `;
+            return; // Para a execução do script aqui.
+        }
+
         const sanityClient = window.SanityClient.createClient({
-            // Encontre essas informações no painel do seu projeto em sanity.io
-            projectId: 't69e086n', // <<< SUBSTITUA AQUI
-            dataset: 'production',   // <<< GERALMENTE 'production'
+            projectId: projectId,
+            dataset: 'production',
             apiVersion: '2022-03-07',
-            useCdn: true, // `false` se você quer sempre os dados mais recentes
+            useCdn: true,
         });
 
         // --- LÓGICA PARA BUSCAR E EXIBIR FOTOS ---
         const galleryGrid = document.getElementById('gallery-grid');
         const loadingMessage = document.getElementById('loading-message');
 
-        // Query para buscar os "posts" (nossas fotos) no Sanity
         const query = `*[_type == "post"] | order(_createdAt desc) {
             title,
             "imageUrl": mainImage.asset->url,
@@ -190,19 +197,17 @@
         }`;
 
         sanityClient.fetch(query).then(photos => {
-            if (loadingMessage) loadingMessage.remove(); // Remove a mensagem de carregamento
+            if (loadingMessage) loadingMessage.remove();
 
             if (photos && photos.length > 0) {
                 photos.forEach(photo => {
                     const photoElement = document.createElement('div');
                     photoElement.className = 'bg-zinc-800 rounded-lg overflow-hidden';
-                    
                     const imageElement = document.createElement('img');
                     imageElement.src = photo.imageUrl;
                     imageElement.alt = photo.altText || photo.title;
                     imageElement.className = 'w-full h-auto object-cover gallery-image';
                     imageElement.onerror = "this.onerror=null;this.src='https://placehold.co/600x800/18181b/e4e4e7?text=Erro+ao+carregar';";
-
                     photoElement.appendChild(imageElement);
                     galleryGrid.appendChild(photoElement);
                 });
@@ -211,7 +216,17 @@
             }
         }).catch(error => {
             console.error('Erro ao buscar fotos do Sanity:', error);
-            galleryGrid.innerHTML = '<p class="col-span-full text-center text-red-400">Ocorreu um erro ao carregar a galeria.</p>';
+            // NOVO: Mensagem de erro mais detalhada para problemas de conexão.
+            galleryGrid.innerHTML = `
+                <div class="col-span-full text-center text-red-400 bg-red-900/20 p-6 rounded-lg">
+                    <p class="font-bold mb-2">Ocorreu um erro ao carregar a galeria.</p>
+                    <p class="text-sm">Isso geralmente acontece por dois motivos:</p>
+                    <ul class="text-left list-disc list-inside mt-2 text-zinc-400">
+                        <li>O <strong>Project ID</strong> ('${projectId}') está incorreto.</li>
+                        <li>A URL do site (<code class="bg-zinc-700 p-1 rounded">${window.location.origin}</code>) não foi adicionada aos <strong>CORS origins</strong> nas configurações da API do seu projeto Sanity.</li>
+                    </ul>
+                </div>
+            `;
         });
 
         // --- LÓGICA EXISTENTE (GEMINI API E MODAL) ---
